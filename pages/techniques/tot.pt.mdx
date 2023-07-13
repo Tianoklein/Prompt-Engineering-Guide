@@ -1,3 +1,42 @@
 # Tree of Thoughts (ToT)
 
-This page needs a translation! Feel free to contribute a translation by clicking the `Edit this page` button on the right side.
+import { Callout, FileTree } from 'nextra-theme-docs'
+import {Screenshot} from 'components/screenshot'
+import TOT from '../../img/TOT.png'
+import TOT2 from '../../img/TOT2.png'
+import TOT3 from '../../img/TOT3.png'
+
+Para tarefas complexas que exigem exploração ou antecipação estratégica, as técnicas de solicitação tradicionais ou simples ficam a desejar. [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) e [Long (2023)](https://arxiv.org/abs/2305.08291) recentemente propuseram a Árvore dos Pensamentos (ToT), uma estrutura que generaliza sobre a solicitação de cadeia de pensamento e incentiva a exploração de pensamentos que servem como etapas intermediárias para resolução de problemas gerais com modelos de linguagem.
+
+ToT mantém uma árvore de pensamentos, onde os pensamentos representam sequências de linguagem coerentes que servem como passos intermediários para a resolução de um problema. Essa abordagem permite que um LM autoavalie o progresso que os pensamentos intermediários fazem para resolver um problema por meio de um processo de raciocínio deliberado. A capacidade do LM de gerar e avaliar pensamentos é então combinada com algoritmos de busca (por exemplo, busca em largura- breadth-first search - e busca em profundidade - depth-first search) para permitir a exploração sistemática de pensamentos com lookahead e backtracking.
+
+A estrutura ToT é ilustrada abaixo:
+
+<Screenshot src={TOT} alt="TOT" />
+Fonte da Imagem: [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) 
+
+Ao usar o ToT, diferentes tarefas requerem a definição do número de candidatos e o número de pensamentos/etapas. Por exemplo, conforme demonstrado no artigo, o [Jogo de 24](https://www.youtube.com/watch?v=LR6O3QdUWtk) é usado como uma tarefa de raciocínio matemático que requer a decomposição dos pensamentos em 3 etapas, cada uma envolvendo uma equação intermediária. A cada passo, os melhores candidatos b=5 são mantidos. 
+
+Para realizar BFS em ToT para a tarefa Jogo de 24 , o LM é solicitado a avaliar cada candidato de pensamento como "certo / talvez / impossível" em relação a atingir 24. Conforme declarado pelos autores, "o objetivo é promover soluções parciais corretas que pode ser veredicto dentro de poucos julgamentos antecipados e eliminar soluções parciais impossíveis com base no senso comum "muito grande/pequeno" e manter o resto "talvez"". Os valores são amostrados 3 vezes para cada pensamento. O processo é ilustrado abaixo:
+
+<Screenshot src={TOT2} alt="TOT2" />
+Fonte da Imagem: [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) 
+
+A partir dos resultados relatados na figura abaixo, o ToT supera substancialmente os outros métodos de solicitação:
+
+<Screenshot src={TOT3} alt="TOT3" />
+Fonte da Imagem: [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) 
+
+Código disponível [aqui](https://github.com/princeton-nlp/tree-of-thought-llm) e [aqui](https://github.com/jieyilong/tree-of-thought-puzzle-solver)
+
+Em alto nível, as principais ideias de [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) and [Long (2023)](https://arxiv.org/abs/2305.08291) são semelhantes. Ambos aprimoram a capacidade do LLM para resolução de problemas complexos por meio de pesquisa em árvore por meio de uma conversa em várias rodadas. Uma das principais diferenças é que [Yao et el. (2023)](https://arxiv.org/abs/2305.10601) aproveita a pesquisa DFS/BFS/beam, enquanto a estratégia de pesquisa em árvore (ou seja, quando retroceder e retroceder por quantos níveis, etc.) proposta em [Long (2023)](https://arxiv.org/abs/2305.08291) é conduzido por um "ToT Controller" treinado por meio de aprendizado por reforço. DFS/BFS/Beam search são estratégias genéricas de busca de soluções sem adaptação a problemas específicos. Em comparação, um ToT Controller treinado por meio de RL pode ser capaz de aprender com um novo conjunto de dados ou por meio de auto jogo (AlphaGo vs pesquisa de força bruta),e, portanto, o sistema ToT baseado em RL pode continuar a evoluir e aprender novos conhecimentos, mesmo com um limite fixo LLM.
+
+[Hulbert (2023)](https://github.com/dave1010/tree-of-thought-prompting) propôs o Tree-of-Thought Prompting, que aplica o conceito principal dos frameworks ToT como uma técnica simples de prompting, fazendo com que o LLM avalie pensamentos intermediários em um único prompt. Um exemplo de prompt ToT é:
+
+```
+Imagine que três especialistas diferentes estão respondendo a essa pergunta.
+Todos os especialistas escreverão 1 passo de seu pensamento, depois compartilhe com o grupo.
+Então todos os especialistas passarão para a próxima etapa, etc.
+Se algum especialista perceber que está errado a qualquer momento, eles vão embora.
+A questão é...
+```
